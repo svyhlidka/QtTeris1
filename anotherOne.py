@@ -1,4 +1,4 @@
-﻿
+﻿###  GIT
 from PyQt5.QtWidgets import * #QWidget, QApplication, QFrame, QMessageBox, QLabel, QDesktopWidget,  QMainWindow, QDialog
 import sys, random
 from PyQt5.QtCore import Qt, QBasicTimer, pyqtSignal, pyqtSlot
@@ -252,7 +252,7 @@ class Board(QWidget):
 
     def checkFullLine(self):
         boo = True
-        for i in range(1,self.board_width): boo = boo and (self.currDict[i,self.board_height] != 0)
+        for i in range(1,self.board_width+1): boo = boo and (self.currDict[i,self.board_height] != 0)
         if boo: 
             self.totalFullLines += 1
             self.my_signal.emit(self.totalFullLines)
@@ -265,9 +265,9 @@ class Board(QWidget):
         oldDict = self.currDict
         line = self.board_height
         while line > 1:
-            for i in range(1,self.board_width,1): self.currDict[i,line]=oldDict[i,line-1]
+            for i in range(1,self.board_width+1,1): self.currDict[i,line]=oldDict[i,line-1]
             line -=1
-        for i in range(1,self.board_width,1): self.currDict[i,1]=0
+        for i in range(1,self.board_width+1,1): self.currDict[i,1]=0
 
 
 
@@ -338,7 +338,7 @@ class Dialog(QDialog):
 
         self.section1QVBoxLayout.addWidget(self.tboard)
         self.lineEdit = QLineEdit()
-        self.lineEdit1 = QLineEdit()
+        self.lineEdit4 = QLineEdit()
 
 
 ###########   Slider######################
@@ -359,13 +359,14 @@ class Dialog(QDialog):
  #       self.tableWidget.setItem(3,0, QTableWidgetItem("Total lines removed:"))
 
         self.setLayout(mainQGridLayout)
-        self.section4QHBoxLayout.addWidget(self.lineEdit1)
+        self.section4QHBoxLayout.addWidget(self.lineEdit4)
     #   lineEdit.textChanged.connect(wigglyWidget.setText)
         self.lineEdit.setText("Změň obtížnost!")
-        self.lineEdit1.setText("Čekám!")
+        self.lineEdit4.setText("Čekám!")
         self.setWindowTitle("To čumíš, co?")
         self.resize(700, 800)
         self.tboard.setFocus(Qt.ActiveWindowFocusReason)
+        self.tboard.my_signal.connect(on_my_signal,100)
 
     def closeEvent(self, event):
         reply = QMessageBox.question(self, 'Message',
@@ -383,10 +384,14 @@ class Dialog(QDialog):
         self.lineEdit.setText("Změněno na:"+str(new_value))
         self.tboard.setFocus(Qt.ActiveWindowFocusReason)
 
+    def v4_change(self, text):
+        dialog.lineEdit4.setText(text)
+
+
 @pyqtSlot(int)
-def on_my_signal_int(self, value):
-    assert isinstance(value, int)
-    self.lineEdit1.setText("Mám!"+str(value))
+def on_my_signal(value):
+        #assert isinstance(value, int)
+    dialog.v4_change("Mám!"+str(value))
 
 if __name__ == '__main__':
     import sys
