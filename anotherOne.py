@@ -4,7 +4,6 @@ import sys, random
 from PyQt5.QtCore import Qt, QBasicTimer, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import *
 import winsound         # for sound  
-import time             # for sleep
 app = QApplication(sys.argv)
 
 
@@ -132,9 +131,24 @@ class Board(QWidget):
         pass
     #    self.setFocusPolicy(Qt.StrongFocus)
 
+    def start_game_again(self):
+        self.currDict = {}
+        self.step = 0
+        self.max  = 1000
+        self.timer.start(self.max, self)
+        self.curentShape = 4
+        self.currentX = 4
+        self.currentY = 1
+        self.started  = False
+        self.paused   = False
+        self.itemDown = False
+        self.shape = Terminoe()
+        self.counter = 0
+        self.totalShapes = 0
+        self.totalLines = 0
+        self.totalFullLines = 0
+
     def paintEvent(self, event):
-        rect = self.contentsRect()
-        #boardTop = rect.bottom() - Board.BoardHeight * self.squareHeight()
         qp = QPainter(self)
         self.update_set(qp)
 
@@ -194,7 +208,8 @@ class Board(QWidget):
               if (x ==  1 and self.currentX+item[0]+1 > self.board_width): return False
               if (x == -1 and self.currentX+item[0]-1 < 1): return False
               if (self.currDict[self.currentX+item[0]+x,self.currentY+item[1]] > 0): return False
-           if (self.currentY+self.shape.currentTerminoMaxY >= self.board_height) or (self.currDict[self.currentX+item[0],self.currentY+item[1]+1] > 0):
+           if (self.currentY+self.shape.currentTerminoMaxY >= self.board_height) \
+                  or (self.currDict[self.currentX+item[0],self.currentY+item[1]+1] > 0):
                self.addTerminou()
                return False              
         return True
@@ -245,22 +260,20 @@ class Board(QWidget):
         pass
 
     def gameOver(self):
-        for i in range(self.board_width+1):
+        for i in range(self.board_width):
            if self.currDict[i+1,1] > 0: 
                self.timer.stop()
                self.started = False
+              # self.start_game()
            else: return
 
     def checkFullLine(self):
-        boo = True
-        for i in range(1,self.board_width+1): boo = boo and (self.currDict[i,self.board_height] != 0)
-        if boo: 
-            self.totalFullLines += 1
-            self.line_signal.emit(self.totalFullLines)
-            winsound.Beep(440, 250) # frequency, duration
-            time.sleep(0.25)
-          #  self.QApplication.beep()
-            self.deleteHistoryLine()
+        for i in range(1,self.board_width+1):  
+            if (self.currDict[i,self.board_height] == 0): return
+        self.totalFullLines += 1
+        self.line_signal.emit(self.totalFullLines)
+        winsound.Beep(4040, 100) # frequency, duration
+        self.deleteHistoryLine()
 
     def deleteHistoryLine(self):
         oldDict = self.currDict
@@ -315,6 +328,15 @@ class Board(QWidget):
     def change_speed(self, new_value):
         self.timer.start(new_value, self)
 
+    def new_game(self):
+        reply = QMessageBox.question(self, 'End of Game?',
+            "Are you sure to quit?", QMessageBox.Yes | 
+            QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+
+            sys.exit(app.exec_())
+        else:
+            event.ignore() 
 
 class Dialog(QDialog):
 
@@ -324,12 +346,13 @@ class Dialog(QDialog):
         mainQGridLayout.setSpacing(10)
 
         self.section1QVBoxLayout = QVBoxLayout()
-        self.section2QVBoxLayout = QVBoxLayout()
+        self.section2GridLayout  = QGridLayout()
+    #    self.section2GridLayout.setSpacing(2)
         self.section3QHBoxLayout = QVBoxLayout()
         self.section4QHBoxLayout = QHBoxLayout()
 
         mainQGridLayout.addLayout(self.section1QVBoxLayout, 0, 0)
-        mainQGridLayout.addLayout(self.section2QVBoxLayout, 0, 1)
+        mainQGridLayout.addLayout(self.section2GridLayout, 0, 1)
         mainQGridLayout.addLayout(self.section3QHBoxLayout, 1, 0)
         mainQGridLayout.addLayout(self.section4QHBoxLayout, 1, 1)
 
@@ -338,26 +361,31 @@ class Dialog(QDialog):
         self.tboard.clearDict()
 
         self.section1QVBoxLayout.addWidget(self.tboard)
-        self.lineEdit = QLineEdit()
+        self.lineEdit = QLabel()
         self.lineEdit4 = QLineEdit()
 
+        self.label0 = QLabel()
+        self.label0.setFont(QFont('Tahoma', 20))
+        self.label0.setText("<font color='DarkGreen'>T E T R I S</font>")
+        self.label0.setAlignment(Qt.AlignCenter)
+        self.section2GridLayout.addWidget(self.label0,0,0)
+
         self.label1 = QLabel()
-        self.label1.setFont(QFont('Tahoma', 20))
+        self.label1.setFont(QFont('Tahoma', 10, italic=True))
         self.label1.setText("<font color='DarkGreen'>Bear's Services Co.</font>")
         self.label1.setAlignment(Qt.AlignCenter)
-        self.section2QVBoxLayout.addWidget(self.label1)
+        self.section2GridLayout.addWidget(self.label1,1,0)
 
         self.label2 = QLabel()
         self.label2.setFont(QFont('Tahoma', 14))
         self.label2.setText("<font color='Blue'>Lines removed:</font>")
         self.label2.setAlignment(Qt.AlignLeft)
-        self.section2QVBoxLayout.addWidget(self.label2)
-
+        self.section2GridLayout.addWidget(self.label2,8,0)
+        
         self.label3 = QLabel()
         self.label3.setFont(QFont('Tahoma', 12))
         self.label3.setText("<font color='Black'>Total terminoes generated:</font>")
-        self.label3.setAlignment(Qt.AlignLeft)
-        self.section2QVBoxLayout.addWidget(self.label3)
+        self.section2GridLayout.addWidget(self.label3,9,0)
 
 
 ###########   Slider######################
@@ -373,20 +401,19 @@ class Dialog(QDialog):
 
         self.section3QHBoxLayout.addWidget(self.lineEdit)
         self.section3QHBoxLayout.addWidget(self.slider1)
- #       self.tableWidget.setItem(0,0, QTableWidgetItem("Total terminoes generated:"))
- #       self.tableWidget.setItem(1,0, QTableWidgetItem("Total full lines:"))
- #       self.tableWidget.setItem(3,0, QTableWidgetItem("Total lines removed:"))
 
         self.setLayout(mainQGridLayout)
         self.section4QHBoxLayout.addWidget(self.lineEdit4)
-    #   lineEdit.textChanged.connect(wigglyWidget.setText)
-        self.lineEdit.setText("Změň obtížnost!")
-        self.lineEdit4.setText("Čekám!")
-        self.setWindowTitle("To čumíš, co?")
+        self.lineEdit.setText("Change the speed!")
+    #    self.lineEdit4.setText("Čekám!")
+        self.setWindowTitle("Bear's Services Co. presents TETRIS")
+        self.setWindowIcon(QIcon('BearPaw.png'))
         self.resize(700, 600)
         self.tboard.setFocus(Qt.ActiveWindowFocusReason)
         self.tboard.terminoe_signal.connect(on_terminoe_signal)
         self.tboard.line_signal.connect(on_line_signal)
+
+
 
     def closeEvent(self, event):
         reply = QMessageBox.question(self, 'Message',
@@ -399,9 +426,9 @@ class Dialog(QDialog):
 
     def v_change(self):
         new_value = self.slider1.value()
-        self.tboard.max  = new_value
+      #  self.tboard.max  = new_value
         self.tboard.change_speed(new_value)
-        self.lineEdit.setText("Změněno na:"+str(new_value))
+        self.lineEdit.setText("Current speed:"+str(new_value))
         self.tboard.setFocus(Qt.ActiveWindowFocusReason)
 
     def label2_change(self, text):
@@ -418,7 +445,7 @@ def on_terminoe_signal(value):
 @pyqtSlot(int)
 def on_line_signal(value):
         #assert isinstance(value, int)
-    dialog.label2_change("Total lines removed: "+str(value))
+    dialog.label2_change("<font color='Blue'>Lines removed:"+str(value)+"</font>")
 
 if __name__ == '__main__':
     import sys
