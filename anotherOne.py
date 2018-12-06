@@ -14,11 +14,11 @@ class Terminoe(object):
              [(0,0)],                           #NoShape 
              [((-2,0),(-1,0),(0,0),(1,0)), ((0,2),(0,1),(0,0),(0,-1)), ((2,0),(1,0),(0,0),(-1,0)), ((0,-2),(0,-1),(0,0),(0,1))],                  # 1 I-Shape
              [((-1,0), (-2,0), (0,0), (0,1)), ((-1,0), (0,-1), (0,-2), (0,0)), ((0,-1), (0,0), (1,0), (2,0)),((1,0), (0,0), (0,1), (0,2))],       # 2 J-Shape
-             [((0,-1), (0,0), (-1,0), (-1,1)),((1,0), (0,0), (0,-1), (-1,-1)), ((0,1), (0,0), (1,0), (1,-1)), ((-1,0), (0,0), (0,1), (1,1))],     # 3 L-Shape
+             [((0,-1), (0,0), (-1,0), (-1,1)),((1,0), (0,0), (0,-1), (-1,-1)), ((0,1), (0,0), (1,0), (1,-1)), ((-1,0), (0,0), (0,1), (1,1))],     # 3 Z-Shape
              [((-1,0), (-1,1), (0,0), (0,1)), ((-1,0), (-1,1), (0,0), (0,1)), ((-1,0), (-1,1), (0,0), (0,1)), ((-1,0), (-1,1), (0,0), (0,1))],    # 4 O-Shape
              [((0,0), (1,0), (-1,1), (0,1)),  ((0,0), (0,-1), (1,1), (1,0)), ((0,0), (1,0), (-1,1), (0,1)), ((0,0), (0,1), (-1,-1), (-1,0))],     # 5 S-Shape
              [((0,0), (1,0), (-1,0), (0,1)),  ((0,0), (0,1), (-1,0), (0,-1)), ((0,0), (1,0), (-1,0), (0,-1)), ((0,0), (1,0), (0,-1), (0,1))],     # 6 T-Shape
-             [((0,0), (-1,0), (1,1), (0,1)),  ((0,0), (0,-1), (-1,1), (-1,0)), ((0,0), (1,0), (-1,1), (0,1)), ((0,0), (-1,0), (-1,-1), (0,1))]]   # 7 Z-Shape
+             [((0,0), (-1,0), (1,-1), (1,0)),  ((0,0), (0,-1), (0,1), (1,1)), ((0,0), (1,0), (-1,0), (-1,1)), ((0,0), (0,1), (0,-1), (-1,-1))]]   # 7 L-Shape
 
     transform = {
         (-2-2):(2,-2), (-1,-2):(2,-1), (0,-2):(2,0), (1,-2):(2,1), (2,-2):(2,2),
@@ -98,7 +98,8 @@ class Terminoe(object):
 
 class Board(QWidget):
 
-    my_signal = pyqtSignal(int)
+    terminoe_signal = pyqtSignal(int)
+    line_signal = pyqtSignal(int)
     Speed = 300
     block_size = 20
     BLOCK_OUTLINE_WIDTH = 2
@@ -233,7 +234,7 @@ class Board(QWidget):
             self.currDict.update({(item[0]+self.currentX,item[1]+self.currentY):self.shape.currentTermino})
         self.started = False
         self.totalShapes += 1
-        self.my_signal.emit(self.totalShapes)
+        self.terminoe_signal.emit(self.totalShapes)
 
     def goDown(self):
         while self.checkPos(0):
@@ -255,7 +256,7 @@ class Board(QWidget):
         for i in range(1,self.board_width+1): boo = boo and (self.currDict[i,self.board_height] != 0)
         if boo: 
             self.totalFullLines += 1
-            self.my_signal.emit(self.totalFullLines)
+            self.line_signal.emit(self.totalFullLines)
             winsound.Beep(440, 250) # frequency, duration
             time.sleep(0.25)
           #  self.QApplication.beep()
@@ -340,6 +341,24 @@ class Dialog(QDialog):
         self.lineEdit = QLineEdit()
         self.lineEdit4 = QLineEdit()
 
+        self.label1 = QLabel()
+        self.label1.setFont(QFont('Tahoma', 20))
+        self.label1.setText("<font color='DarkGreen'>Bear's Services Co.</font>")
+        self.label1.setAlignment(Qt.AlignCenter)
+        self.section2QVBoxLayout.addWidget(self.label1)
+
+        self.label2 = QLabel()
+        self.label2.setFont(QFont('Tahoma', 14))
+        self.label2.setText("<font color='Blue'>Lines removed:</font>")
+        self.label2.setAlignment(Qt.AlignLeft)
+        self.section2QVBoxLayout.addWidget(self.label2)
+
+        self.label3 = QLabel()
+        self.label3.setFont(QFont('Tahoma', 12))
+        self.label3.setText("<font color='Black'>Total terminoes generated:</font>")
+        self.label3.setAlignment(Qt.AlignLeft)
+        self.section2QVBoxLayout.addWidget(self.label3)
+
 
 ###########   Slider######################
         self.slider1 = QSlider(Qt.Horizontal)
@@ -364,9 +383,10 @@ class Dialog(QDialog):
         self.lineEdit.setText("Změň obtížnost!")
         self.lineEdit4.setText("Čekám!")
         self.setWindowTitle("To čumíš, co?")
-        self.resize(700, 800)
+        self.resize(700, 600)
         self.tboard.setFocus(Qt.ActiveWindowFocusReason)
-        self.tboard.my_signal.connect(on_my_signal,100)
+        self.tboard.terminoe_signal.connect(on_terminoe_signal)
+        self.tboard.line_signal.connect(on_line_signal)
 
     def closeEvent(self, event):
         reply = QMessageBox.question(self, 'Message',
@@ -384,14 +404,21 @@ class Dialog(QDialog):
         self.lineEdit.setText("Změněno na:"+str(new_value))
         self.tboard.setFocus(Qt.ActiveWindowFocusReason)
 
-    def v4_change(self, text):
-        dialog.lineEdit4.setText(text)
+    def label2_change(self, text):
+        dialog.label2.setText(text)
 
+    def label3_change(self, text):
+        dialog.label3.setText(text)
 
 @pyqtSlot(int)
-def on_my_signal(value):
+def on_terminoe_signal(value):
         #assert isinstance(value, int)
-    dialog.v4_change("Mám!"+str(value))
+    dialog.label3_change("Total terminoes generated: "+str(value))
+
+@pyqtSlot(int)
+def on_line_signal(value):
+        #assert isinstance(value, int)
+    dialog.label2_change("Total lines removed: "+str(value))
 
 if __name__ == '__main__':
     import sys
