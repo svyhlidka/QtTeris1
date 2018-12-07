@@ -203,15 +203,15 @@ class Board(QWidget):
                
     def checkPos(self, x):
         for item in self.shape.terminoesCoords[self.shape.currentTermino][self.shape.status]:
- #          print(x , self.currentX, self.currentY,"(", item[0], item[1],")", self.shape.currentTermino)
            if (x != 0):
               if (x ==  1 and self.currentX+item[0]+1 > self.board_width): return False
               if (x == -1 and self.currentX+item[0]-1 < 1): return False
               if (self.currDict[self.currentX+item[0]+x,self.currentY+item[1]] > 0): return False
-           if (self.currentY+self.shape.currentTerminoMaxY >= self.board_height) \
+           else:
+               if (self.currentY+self.shape.currentTerminoMaxY >= self.board_height) \
                   or (self.currDict[self.currentX+item[0],self.currentY+item[1]+1] > 0):
-               self.addTerminou()
-               return False              
+                  self.addTerminou()
+                  return False              
         return True
 
     def moveItem(self,left):
