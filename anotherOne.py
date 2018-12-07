@@ -47,8 +47,10 @@ class Terminoe(object):
     def setCurrentTermino(self,i,rnd):
         if rnd:
             self.currentTermino = (random.randint(1, 7))
+            self.currentColor   = (random.randint(1, 7))
         else:
-            self.currentTermino = i 
+            self.currentTermino = i
+            self.currentColor   = i
         self.setMinMax()
 
     def setMinMax(self):
@@ -175,7 +177,7 @@ class Board(QWidget):
            for i in range(1,self.board_width+1):
                self.draw_square(i, j, self.block_size, self.block_size, self.shape.terminoesColors[self.currDict[i,j]],qp) 
         for item in self.shape.terminoesCoords[self.shape.currentTermino][self.shape.status]:
-            self.draw_square(self.currentX+item[0], self.currentY+item[1], self.block_size, self.block_size, self.shape.terminoesColors[self.shape.currentTermino],qp)
+            self.draw_square(self.currentX+item[0], self.currentY+item[1], self.block_size, self.block_size, self.shape.terminoesColors[self.shape.currentColor],qp)
         self.lineDown()
 
 ###############  testing area
@@ -246,7 +248,7 @@ class Board(QWidget):
 
     def addTerminou(self):
         for item in self.shape.terminoesCoords[self.shape.currentTermino][self.shape.status]:
-            self.currDict.update({(item[0]+self.currentX,item[1]+self.currentY):self.shape.currentTermino})
+            self.currDict.update({(item[0]+self.currentX,item[1]+self.currentY):self.shape.currentColor})
         self.started = False
         self.totalShapes += 1
         self.terminoe_signal.emit(self.totalShapes)
