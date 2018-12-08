@@ -1,7 +1,7 @@
 ﻿###  GIT
 from PyQt5.QtWidgets import * #QWidget, QApplication, QFrame, QMessageBox, QLabel, QDesktopWidget,  QMainWindow, QDialog
 import sys, random
-from PyQt5.QtCore import Qt, QBasicTimer, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import Qt, QBasicTimer, pyqtSignal, pyqtSlot, QRect
 from PyQt5.QtGui import *
 import winsound         # for sound  
 app = QApplication(sys.argv)
@@ -441,18 +441,14 @@ class Dialog(QDialog):
 
 @pyqtSlot(int)
 def on_terminoe_signal(value):
-        #assert isinstance(value, int)
     dialog.label3_change("Total terminoes generated: "+str(value))
 
 @pyqtSlot(int)
 def on_line_signal(value):
-        #assert isinstance(value, int)
     dialog.label2_change("<font color='Blue'>Lines removed:"+str(value)+"</font>")
 
 if __name__ == '__main__':
     import sys
-    #game = Game()    
-
     dialog = Dialog()
     dialog.show();
     sys.exit(app.exec_()) 
