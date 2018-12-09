@@ -174,6 +174,13 @@ class Ui_MainWindow(object):
         self.label.setText(_translate("MainWindow", "Next terminoe:"))
         self.slider_label.setText(_translate("MainWindow", "Change the speed!"))
 
+
+class Main(QMainWindow, Ui_MainWindow):
+    def __init__(self):
+        QMainWindow.__init__(self)
+        self.setupUi(self)
+
+
     def closeEvent(self, event):
         reply = QMessageBox.question(self, 'Message',
             "Are you sure to quit?", QMessageBox.Yes | 
@@ -200,34 +207,30 @@ class Ui_MainWindow(object):
             "Are you sure to quit?", QMessageBox.Yes | 
             QMessageBox.No, QMessageBox.No)
         if reply == QMessageBox.Yes:
-            print('slot yes!!!!!!!!!!!!')
-            sys.exit(QApplication.exec_())
+            self.tboard.chcip_app=True
         else:
             print('no!!!!!!!!!!!!!1')
-#            self.start_game_again()
-#            return
-            event.ignore() 
+            self.tboard.new_start=True
+            self.tboard.started=False
+
 
 
 @pyqtSlot(int)
 def on_terminoe_signal(value):
-    ui.label_term_generated_change("Total terminoes generated: "+str(value))
+    window.label_term_generated_change("Total terminoes generated: "+str(value))
 
 @pyqtSlot(int)
 def on_line_signal(value):
-    ui.label_remove_change("<font color='Blue'>Lines removed:"+str(value)+"</font>")
+    window.label_remove_change("<font color='Blue'>Lines removed:"+str(value)+"</font>")
 
 @pyqtSlot()
 def on_game_over_signal():
-    print("signal!!!!")
-#    ui.end_of_game()
+    window.end_of_game()
+
+
 
 if __name__ == "__main__":
-    import sys
     app = QApplication(sys.argv)
-    MainWindow = QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
+    window = Main()
+    window.show()
     sys.exit(app.exec_())
-

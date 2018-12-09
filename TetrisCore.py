@@ -127,20 +127,17 @@ class Board(QWidget):
         self.totalShapes = 0
         self.totalLines = 0
         self.totalFullLines = 0
+        self.new_start = True
+        self.chcip_app = False
 
     def initUI(self):
         pass
     #    self.setFocusPolicy(Qt.StrongFocus)
 
     def start_game_again(self):
-        self.currDict = {}
-        self.step = 0
-        self.max  = 1000
-        self.timer.start(self.max, self)
         self.curentShape = 4
         self.currentX = 4
         self.currentY = 1
-        self.started  = False
         self.paused   = False
         self.itemDown = False
         self.shape = Terminoe()
@@ -149,9 +146,17 @@ class Board(QWidget):
         self.totalLines = 0
         self.totalFullLines = 0
         self.clearDict()
+        self.new_start = False
+        self.shape.setCurrentTermino(0,True) #(1,False)
+        self.setCurrentX(0,True) #(1,False)
+        self.setCurrentY(self.shape.getMinY()+1,False)
+        self.started = True
 
     def paintEvent(self, event):
         qp = QPainter(self)
+        if self.chcip_app:
+            #qp.end()
+            sys.exit(self) #app.quit()
         self.update_set(qp)
 
     def draw_square(self, x, y, w, h, color, qp ) :
@@ -166,6 +171,8 @@ class Board(QWidget):
                self.currDict.update({(i,j):0})
 
     def update_set(self , qp):
+        if self.new_start:
+            self.start_game_again()
         if not self.started: 
             self.gameOver()
             self.checkFullLine()
@@ -353,3 +360,4 @@ class Board(QWidget):
         self.timer.start(new_value, self)
 
 
+    
