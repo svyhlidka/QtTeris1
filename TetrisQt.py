@@ -131,7 +131,6 @@ class Ui_MainWindow(object):
         self.tboard.clearDict()
         self.gridLayout.addWidget(self.tboard,0,0)
 
-
         self.slider1 = QSlider(self.centralwidget)
         self.slider1.setGeometry(QRect(10, 560, 361, 22))
         self.slider1.setOrientation(Qt.Horizontal)
@@ -146,8 +145,6 @@ class Ui_MainWindow(object):
         self.slider_label.setObjectName("slider_label")
 
         ###########   Slider######################
-      #  self.slider1 = QSlider(Qt.Horizontal)
-      #  self.slider1.setGeometry(QRect(10, 560, 551, 22))
         self.slider1.setMinimum(1)
         self.slider1.setMaximum(self.tboard.max)
         self.slider1.setValue(int(0.2*self.tboard.max))
@@ -158,8 +155,11 @@ class Ui_MainWindow(object):
 ########################### 
 
         self.tboard.setFocus(Qt.ActiveWindowFocusReason)
+
+################  signal connect ######################################
         self.tboard.terminoe_signal.connect(on_terminoe_signal)
         self.tboard.line_signal.connect(on_line_signal)
+        self.tboard.game_over_signal.connect(on_game_over_signal)
 
         self.retranslateUi(MainWindow)
         QMetaObject.connectSlotsByName(MainWindow)
@@ -185,8 +185,8 @@ class Ui_MainWindow(object):
 
     def v_change(self):
         new_value = self.slider1.value()
-        self.tboard.change_speed(new_value)
-        self.slider_label.setText("Current speed:"+str(new_value))
+        self.tboard.change_speed(int(self.tboard.max-new_value))
+        self.slider_label.setText("Current speed:"+str(int(new_value)))
         self.tboard.setFocus(Qt.ActiveWindowFocusReason)
 
     def label_remove_change(self, text):
@@ -194,6 +194,20 @@ class Ui_MainWindow(object):
 
     def label_term_generated_change(self, text):
         self.label_term_generated.setText(text)
+
+    def end_of_game(self):
+        reply = QMessageBox.question(self, "G A M E   O V E R!",
+            "Are you sure to quit?", QMessageBox.Yes | 
+            QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            print('slot yes!!!!!!!!!!!!')
+            sys.exit(QApplication.exec_())
+        else:
+            print('no!!!!!!!!!!!!!1')
+#            self.start_game_again()
+#            return
+            event.ignore() 
+
 
 @pyqtSlot(int)
 def on_terminoe_signal(value):
@@ -203,7 +217,10 @@ def on_terminoe_signal(value):
 def on_line_signal(value):
     ui.label_remove_change("<font color='Blue'>Lines removed:"+str(value)+"</font>")
 
-
+@pyqtSlot()
+def on_game_over_signal():
+    print("signal!!!!")
+#    ui.end_of_game()
 
 if __name__ == "__main__":
     import sys

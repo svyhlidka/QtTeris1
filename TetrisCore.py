@@ -1,7 +1,7 @@
 
 from PyQt5.QtWidgets import * #QWidget, QApplication, QFrame, QMessageBox, QLabel, QDesktopWidget,  QMainWindow, QDialog
 import sys, random
-from PyQt5.QtCore import Qt, QBasicTimer, pyqtSignal, pyqtSlot, QRect
+from PyQt5.QtCore import Qt, QBasicTimer, pyqtSignal, pyqtSlot, QRect, QCoreApplication
 from PyQt5.QtGui import *
 import winsound         # for sound  
 
@@ -97,8 +97,9 @@ class Terminoe(object):
 
 class Board(QWidget):
 
-    terminoe_signal = pyqtSignal(int)
-    line_signal = pyqtSignal(int)
+    terminoe_signal    = pyqtSignal(int)
+    line_signal        = pyqtSignal(int)
+    game_over_signal   = pyqtSignal()
     Speed = 300
     block_size = 20
     BLOCK_OUTLINE_WIDTH = 2
@@ -112,7 +113,7 @@ class Board(QWidget):
         self.currDict = {}
         self.initUI()
         self.step = 0
-        self.max  = 1000
+        self.max  = 500
         self.timer = QBasicTimer()
         self.timer.start(self.max, self)
         self.curentShape = 4
@@ -147,6 +148,7 @@ class Board(QWidget):
         self.totalShapes = 0
         self.totalLines = 0
         self.totalFullLines = 0
+        self.clearDict()
 
     def paintEvent(self, event):
         qp = QPainter(self)
@@ -177,6 +179,35 @@ class Board(QWidget):
         for item in self.shape.terminoesCoords[self.shape.currentTermino][self.shape.status]:
             self.draw_square(self.currentX+item[0], self.currentY+item[1], self.block_size, self.block_size, self.shape.terminoesColors[self.shape.currentColor],qp)
         self.lineDown()
+
+    def gameOver(self):
+        for i in range(self.board_width):
+           if self.currDict[i+1,1] > 0: 
+               self.game_over_signal.emit()
+               self.timer.stop()
+               self.started = False
+             #  self.clearDict()
+               return
+              # self.start_game()
+           else: return
+
+    def new_game(self,qp):
+        self.game_over_signal.emit()
+        reply = QMessageBox.question(self, "G A M E   O V E R!",
+            "Are you sure to quit?", QMessageBox.Yes | 
+            QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            print('yes!!!!!!!!!!!!')
+            #QApplication.quit() 
+           # return
+            qp.end()
+            #pyqtRestoreInputHook()
+            sys.exit(QApplication.exec_())
+        else:
+            print('no!!!!!!!!!!!!!1')
+            self.start_game_again()
+            return
+            #event.ignore() 
 
 ###############  testing area
 #        term = 3
@@ -213,6 +244,13 @@ class Board(QWidget):
                   self.addTerminou()
                   return False              
         return True
+    
+    def addTerminou(self):
+        for item in self.shape.terminoesCoords[self.shape.currentTermino][self.shape.status]:
+            self.currDict.update({(item[0]+self.currentX,item[1]+self.currentY):self.shape.currentColor})
+        self.started = False
+        self.totalShapes += 1
+        self.terminoe_signal.emit(self.totalShapes)
 
     def moveItem(self,left):
         if left: 
@@ -244,13 +282,6 @@ class Board(QWidget):
         if self.checkPos(0): self.setCurrentY(self.currentY+1,False)
 
 
-    def addTerminou(self):
-        for item in self.shape.terminoesCoords[self.shape.currentTermino][self.shape.status]:
-            self.currDict.update({(item[0]+self.currentX,item[1]+self.currentY):self.shape.currentColor})
-        self.started = False
-        self.totalShapes += 1
-        self.terminoe_signal.emit(self.totalShapes)
-
     def goDown(self):
         while self.checkPos(0):
             self.setCurrentY(self.currentY+1,False)
@@ -259,13 +290,6 @@ class Board(QWidget):
     def pause(self):
         pass
 
-    def gameOver(self):
-        for i in range(self.board_width):
-           if self.currDict[i+1,1] > 0: 
-               self.timer.stop()
-               self.started = False
-              # self.start_game()
-           else: return
 
     def checkFullLine(self):
         for i in range(1,self.board_width+1):  
@@ -328,13 +352,4 @@ class Board(QWidget):
     def change_speed(self, new_value):
         self.timer.start(new_value, self)
 
-    def new_game(self):
-        reply = QMessageBox.question(self, 'End of Game?',
-            "Are you sure to quit?", QMessageBox.Yes | 
-            QMessageBox.No, QMessageBox.No)
-        if reply == QMessageBox.Yes:
-
-            sys.exit(app.exec_())
-        else:
-            event.ignore() 
 
