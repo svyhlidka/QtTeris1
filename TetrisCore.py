@@ -193,10 +193,6 @@ class Board(QWidget):
                self.game_over_signal.emit()
                self.timer.stop()
                self.started = False
-             #  self.clearDict()
-               return
-              # self.start_game()
-           else: return
 
     def new_game(self,qp):
         self.game_over_signal.emit()
